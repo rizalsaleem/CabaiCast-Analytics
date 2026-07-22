@@ -313,7 +313,12 @@ div[data-testid="stDownloadButton"] > button:focus {{
 }}
 
 /* ── Inputs ───────────────────────────────────────── */
-.stTextInput [data-baseweb="input"], .stNumberInput [data-baseweb="input"] {{
+/* ── Inputs (Text, Number, Select) — force consistent regardless of Streamlit theme ── */
+.stTextInput [data-baseweb="input"],
+.stNumberInput [data-baseweb="input"],
+.stSelectbox [data-baseweb="select"] > div,
+.stMultiSelect [data-baseweb="select"] > div,
+.stDateInput [data-baseweb="input"] {{
     background-color: {t['inp_bg']} !important;
     border: 2px solid #D1CCE8 !important;
     border-radius: 12px !important;
@@ -322,7 +327,8 @@ div[data-testid="stDownloadButton"] > button:focus {{
     background-color: {t['inp_bg']} !important;
     border: none !important;
 }}
-.stTextInput input, .stNumberInput input {{
+.stTextInput input, .stNumberInput input,
+.stSelectbox input, .stDateInput input {{
     color: {t['text']} !important;
     background-color: transparent !important;
 }}
@@ -330,8 +336,34 @@ div[data-testid="stDownloadButton"] > button:focus {{
     color: {t['muted']} !important;
     opacity: 1 !important;
 }}
-.stTextInput svg {{
+.stTextInput svg, .stSelectbox svg, .stDateInput svg {{
     color: {t['muted']} !important;
+    fill: {t['muted']} !important;
+}}
+
+/* Teks & ikon yang ditampilkan di dalam selectbox (nilai terpilih) */
+.stSelectbox [data-baseweb="select"] div,
+.stSelectbox [data-baseweb="select"] span {{
+    color: {t['text']} !important;
+}}
+
+/* Dropdown menu (popover) saat selectbox dibuka — ini render via portal, harus ditarget global */
+[data-baseweb="popover"] [data-baseweb="menu"],
+[data-baseweb="popover"] ul {{
+    background-color: {t['card']} !important;
+    border: 1px solid {t['border']} !important;
+    border-radius: 12px !important;
+}}
+[data-baseweb="popover"] li,
+[data-baseweb="popover"] [role="option"] {{
+    background-color: {t['card']} !important;
+    color: {t['text']} !important;
+}}
+[data-baseweb="popover"] li:hover,
+[data-baseweb="popover"] [role="option"]:hover,
+[data-baseweb="popover"] [aria-selected="true"] {{
+    background-color: {t['pri_light']} !important;
+    color: {t['primary']} !important;
 }}
 
 .stSelectbox label, .stTextInput label, .stNumberInput label {{
