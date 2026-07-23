@@ -158,10 +158,15 @@ header[data-testid="stHeader"] button {{
 [data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label:has(input:checked) {{
     background: {t['primary']} !important; color: #FFFFFF !important;
 }}
+
+/* ── Sembunyikan bulatan radio indicator (fix tampilan deploy) ── */
 [data-testid="stSidebar"] .stRadio [data-baseweb="radio"] {{
     display: none !important;
 }}
-
+[data-testid="stSidebar"] .stRadio label svg,
+[data-testid="stSidebar"] .stRadio label input[type="radio"] {{
+    display: none !important;
+}}
 /* ── Cards ────────────────────────────────────────── */
 .card {{
     background: {t['card']}; border-radius: 22px;
