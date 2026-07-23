@@ -167,6 +167,9 @@ header[data-testid="stHeader"] button {{
 [data-testid="stSidebar"] .stRadio label input[type="radio"] {{
     display: none !important;
 }}
+[data-testid="stSidebar"] [data-testid="stRadioOption"] > span:first-of-type + span {{
+    display: none !important;
+}}
 /* ── Cards ────────────────────────────────────────── */
 .card {{
     background: {t['card']}; border-radius: 22px;
