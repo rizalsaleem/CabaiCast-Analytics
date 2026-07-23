@@ -158,7 +158,7 @@ header[data-testid="stHeader"] button {{
 [data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label:has(input:checked) {{
     background: {t['primary']} !important; color: #FFFFFF !important;
 }}
-[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label > div:first-child {{
+[data-testid="stSidebar"] .stRadio [data-baseweb="radio"] {{
     display: none !important;
 }}
 
