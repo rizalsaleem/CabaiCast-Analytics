@@ -15,14 +15,6 @@ from sklearn.metrics import (
     mean_absolute_percentage_error,
 )
 
-try:
-    import openmeteo_requests
-    import requests_cache
-    from retry_requests import retry
-    METEO_TERSEDIA = True
-except ImportError:
-    METEO_TERSEDIA = False
-
 # ══════════════════════════════════════════════════════════════════════════════
 # PAGE CONFIG
 # ══════════════════════════════════════════════════════════════════════════════
@@ -542,7 +534,7 @@ def load_artifacts():
 @st.cache_data
 def load_dataset():
     df = pd.read_excel(
-        BASE_DIR / "dataset harga cabai rawit pasar tradisional dan iklim kota bandung.xlsx"
+        BASE_DIR / "dataset harga cabai rawit merah dan iklim kota bandung.xlsx"
     )
     df["Tanggal"] = pd.to_datetime(df["Tanggal"])
     return df.sort_values("Tanggal").reset_index(drop=True)
@@ -574,7 +566,7 @@ def add_rolling(df, series, windows, prefix, kind="mean"):
 def build_features(df):
     """Replikasi persis feature engineering dari notebook (bagian Data Preparation)."""
     df = df.copy()
-    harga = df["Harga Cabai Rawit (Rp/kg)"]
+    harga = df["Harga Cabai Rawit Merah (Rp/kg)"]
     add_lags(df, harga, [1, 2, 3, 5, 7, 14, 30], "lag")
 
     deltas = {
@@ -601,7 +593,7 @@ def get_model_metrics(_model, _scaler, fitur, df):
     df_model     = build_features(df)
     X            = df_model[fitur]
     lag1         = df_model["lag_1"]
-    harga_aktual = df_model["Harga Cabai Rawit (Rp/kg)"]
+    harga_aktual = df_model["Harga Cabai Rawit Merah (Rp/kg)"]
 
     split_idx       = int(len(df_model) * 0.8)
     X_test_scaled   = _scaler.transform(X.iloc[split_idx:])
@@ -631,34 +623,6 @@ def ambil_data_iklim(df, bulan, tahun):
         df_iklim = df_bulan_ini[["Tanggal"] + COL_IKLIM].reset_index(drop=True)
         df_iklim["bulan"] = df_iklim["Tanggal"].dt.month
         return df_iklim, "Data Historis (dataset)", start_date, end_date
-
-    if METEO_TERSEDIA:
-        try:
-            url = (
-                "https://archive-api.open-meteo.com/v1/archive"
-                if end_date < date.today()
-                else "https://api.open-meteo.com/v1/forecast"
-            )
-            params = {
-                "latitude": LAT, "longitude": LON, "timezone": "Asia/Jakarta",
-                "start_date": str(start_date), "end_date": str(end_date),
-                "daily": [
-                    "temperature_2m_max", "temperature_2m_min", "temperature_2m_mean",
-                    "precipitation_sum", "precipitation_hours", "wind_speed_10m_max",
-                    "shortwave_radiation_sum", "et0_fao_evapotranspiration",
-                ],
-            }
-            session = requests_cache.CachedSession(".cache", expire_after=3600)
-            client  = openmeteo_requests.Client(session=retry(session, retries=5, backoff_factor=0.2))
-            daily   = client.weather_api(url, params=params)[0].Daily()
-            df_iklim = pd.DataFrame({
-                "Tanggal": tanggal_range,
-                **{k: daily.Variables(i).ValuesAsNumpy() for i, k in enumerate(COL_IKLIM)},
-            })
-            df_iklim["bulan"] = df_iklim["Tanggal"].dt.month
-            return df_iklim, "API Real (Open-Meteo)", start_date, end_date
-        except Exception:
-            pass
 
     df_hist = df[df["Tanggal"].dt.month == bulan]
     rata_per_tanggal = df_hist.groupby(df_hist["Tanggal"].dt.day)[COL_IKLIM].mean()
@@ -695,8 +659,8 @@ def prediksi_bulanan(df, model, scaler, fitur, bulan, tahun):
 
     mode = "Validasi" if df["Tanggal"].between(str(start_date), str(end_date)).any() else "Proyeksi"
 
-    aktual_dict = df.set_index(df["Tanggal"].dt.date)["Harga Cabai Rawit (Rp/kg)"].to_dict()
-    harga_buf   = list(df[df["Tanggal"] < pd.Timestamp(start_date)]["Harga Cabai Rawit (Rp/kg)"].values)
+    aktual_dict = df.set_index(df["Tanggal"].dt.date)["Harga Cabai Rawit Merah (Rp/kg)"].to_dict()
+    harga_buf   = list(df[df["Tanggal"] < pd.Timestamp(start_date)]["Harga Cabai Rawit Merah (Rp/kg)"].values)
     suhu_buf    = list(df[df["Tanggal"] < pd.Timestamp(start_date)]["Suhu Min (°C)"].values)
     hujan_buf   = list(df[df["Tanggal"] < pd.Timestamp(start_date)]["Curah Hujan (mm)"].values)
 
@@ -757,7 +721,7 @@ def page_dashboard(df, model, scaler, fitur, mae, rmse, r2, mape, tgl_test, y_te
     t = T()
 
     # ── 4 Summary Cards ──────────────────────────────────────────────────────
-    harga_terakhir = df["Harga Cabai Rawit (Rp/kg)"].iloc[-1]
+    harga_terakhir = df["Harga Cabai Rawit Merah (Rp/kg)"].iloc[-1]
     today          = date.today()
     next_m         = today.month % 12 + 1
     next_y         = today.year + (1 if today.month == 12 else 0)
@@ -786,7 +750,7 @@ def page_dashboard(df, model, scaler, fitur, mae, rmse, r2, mape, tgl_test, y_te
             )
             fig_hist = line_chart(
                 [
-                    {"x": df["Tanggal"], "y": df["Harga Cabai Rawit (Rp/kg)"],
+                    {"x": df["Tanggal"], "y": df["Harga Cabai Rawit Merah (Rp/kg)"],
                      "name": "Harga Aktual", "color": t["primary"], "fill": True},
                     {"x": tgl_test, "y": y_pred_all,
                      "name": "Prediksi Model (Data Uji)", "color": t["secondary"], "dash": "dash"},
@@ -842,7 +806,7 @@ def page_dashboard(df, model, scaler, fitur, mae, rmse, r2, mape, tgl_test, y_te
         with st.container(key="card_4"):
             st.markdown(sec_header("Distribusi Harga"), unsafe_allow_html=True)
             fig_dist = go.Figure(go.Histogram(
-                x=df["Harga Cabai Rawit (Rp/kg)"], nbinsx=40,
+                x=df["Harga Cabai Rawit Merah (Rp/kg)"], nbinsx=40,
                 marker=dict(color=t["primary"], opacity=0.8, line=dict(width=0)),
                 hovertemplate="Rp %{x:,.0f}<br>%{y} data<extra></extra>",
             ))
@@ -859,10 +823,10 @@ def page_dashboard(df, model, scaler, fitur, mae, rmse, r2, mape, tgl_test, y_te
         with st.container(key="card_5"):
             st.markdown(sec_header("Korelasi Fitur"), unsafe_allow_html=True)
             df_feat = build_features(df)
-            top_f   = (["Harga Cabai Rawit (Rp/kg)"]
+            top_f   = (["Harga Cabai Rawit Merah (Rp/kg)"]
                        + list(feat_df.sort_values("Importance", ascending=False).head(7)["Fitur"]))
             corr = df_feat[[c for c in top_f if c in df_feat.columns]].corr()
-            short = [c.replace("Harga Cabai Rawit (Rp/kg)", "Harga")
+            short = [c.replace("Harga Cabai Rawit Merah (Rp/kg)", "Harga")
                       .replace("CurahHujan","CH").replace("SuhuMin","Tmin")
                       .replace("_rolling","_r").replace("_lag","_l") for c in corr.columns]
             fig_corr = go.Figure(go.Heatmap(
@@ -922,7 +886,7 @@ def page_data_historis(df):
     start   = st.session_state.data_page * rows_per_page
     df_show = df_view.iloc[start: start + rows_per_page].copy()
     df_show["Tanggal"] = df_show["Tanggal"].dt.strftime("%d %b %Y")
-    df_show["Harga Cabai Rawit (Rp/kg)"] = df_show["Harga Cabai Rawit (Rp/kg)"].apply(
+    df_show["Harga Cabai Rawit Merah (Rp/kg)"] = df_show["Harga Cabai Rawit Merah (Rp/kg)"].apply(
         lambda x: f"Rp {x:,.0f}"
     )
 
