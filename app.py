@@ -1213,7 +1213,7 @@ with hcol1:
     {sapaan}! 👋
 </h1>
     <p style="font-size:1rem;color:{t_hdr['muted']};margin:5px 0 0 0;">
-        Sistem Prediksi Harga Cabai Rawit Kota Bandung
+        Sistem Prediksi Harga Cabai Rawit Merah Kota Bandung
     </p>
 </div>""", unsafe_allow_html=True)
 with hcol2:
